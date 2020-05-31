@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:menuapp/screens/select_menu_category.dart';
 import 'package:menuapp/screens/select_table.dart';
 
 class HomePage extends StatefulWidget {
@@ -26,6 +25,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('ANT POS'),
         centerTitle: true,
+        elevation: 0,
       ),
       body: _children[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(

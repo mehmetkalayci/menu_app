@@ -1,9 +1,9 @@
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/models/table_group.dart';
 import 'package:menuapp/screens/select_menu_category.dart';
+import 'package:menuapp/screens/table_details.dart';
 import 'package:menuapp/widgets/table_item.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -13,36 +13,56 @@ class SelectTablePage extends StatefulWidget {
 }
 
 class _SelectTablePageState extends State<SelectTablePage> {
-  List<TableGroup> tableData = DUMMY_GROUPS_WITH_TABLES.toList();
+
+
+  ///////////////////////
+  var data = DUMMY_GROUPS_WITH_TABLES.toList();
 
   List<Tables> tables = [];
+  List<String> tableGroups = [];
 
   void getTables(String categoryName) {
-    print(categoryName);
     setState(() {
-      tables = this
-          .tableData
-          .singleWhere((element) => element.name == categoryName)
-          .tables
-          .toList();
+      // önce masaları temizle
+      tables = [];
+      if (categoryName == 'Hepsi') {
+        // tüm masaları tables a ekle
+        data.forEach((element) => tables.addAll(element.tables));
+      } else {
+        // seçili kategorilerdeki masaları tables a ekle
+        tables = data
+            .singleWhere((element) => element.name == categoryName)
+            .tables
+            .toList();
+      }
     });
-    print(tables);
+  }
+
+  @override
+  void initState() {
+    setState(() {
+
+
+      // table groups doldur
+      data.forEach((element) => tableGroups.add(element.name));
+      tableGroups.add('Hepsi');
+    });
   }
 
   Offset referenceOffset = Offset.zero;
 
   @override
   Widget build(BuildContext context) {
-    List<String> tableGroupNames =
-        Set.of(tableData.map((e) => e.name).toList()).toList();
-    //print(tableGroupNames);
-
     return Scaffold(
+      appBar: AppBar(
+          title: Text('ANT POS'),
+          ),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(10),
           child: Column(children: [
+
             Container(
               height: 90,
               child: CustomScrollView(
@@ -60,22 +80,25 @@ class _SelectTablePageState extends State<SelectTablePage> {
                                   child: InkWell(
                                       splashColor: Colors.redAccent,
                                       onTap: () {
-                                        getTables(tableGroupNames[index]);
+                                        getTables(tableGroups[index]);
                                       },
                                       child: Center(
                                         child: Text(
-                                          tableGroupNames[index],
+                                          tableGroups[index],
                                           style: TextStyle(fontSize: 18),
                                         ),
                                       )),
                                 ),
                               ),
-                          itemCount: tableGroupNames.length),
+                          itemCount: tableGroups.length),
                     ),
                   ),
                 ],
               ),
             ),
+
+
+
             Expanded(
               child: GridView.builder(
                 itemCount: tables.length,
@@ -86,15 +109,24 @@ class _SelectTablePageState extends State<SelectTablePage> {
                     onTap: () {
                       print(tables[index].tableName);
                       // todo: masa seçildikten sonra kategori seçimine yönlendir
-                      Navigator.push(
-                        context,
-                        PageTransition(
-                          type: PageTransitionType.fade,
-                          child:
-                          SelectMenuCategoryPage(),
-                        ),
-                      );
-
+                      // todo: sipariş varsa, masa detay sayfası aç
+                      if (tables[index].orders.length > 0) {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.fade,
+                            child: TableDetailsPage(tables[index]),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          PageTransition(
+                            type: PageTransitionType.fade,
+                            child: SelectMenuCategoryPage(),
+                          ),
+                        );
+                      }
                     },
                     child: TableItem(
                         tables[index].tableName,

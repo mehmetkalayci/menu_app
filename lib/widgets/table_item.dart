@@ -10,6 +10,7 @@ class TableItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      padding: EdgeInsets.all(10),
       height: 75,
       width: 100,
       decoration: BoxDecoration(
@@ -24,6 +25,7 @@ class TableItem extends StatelessWidget {
           ]),
       child: Center(
           child: Text(this._title,
+              textAlign: TextAlign.center,
               style:
               TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
     );

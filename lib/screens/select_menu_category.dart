@@ -13,14 +13,11 @@ class SelectMenuCategoryPage extends StatefulWidget {
 }
 
 class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
-
-
-
-
-  List<Category> allCategories = DUMMY_CATEGORIES.toList();
+  var allCategories = DUMMY_CATEGORIES.toList();
   List<Category> selectedCategories = [];
 
-  ListQueue<int> selectedMenuIds = ListQueue();
+  ListQueue<Map<int, String>> selectedMenus = ListQueue<Map<int, String>>();
+  String _breadcrumbs = '';
 
   void getCategories(int catId) {
     setState(() {
@@ -29,7 +26,6 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     });
 
     if (selectedCategories.length <= 0) {
-      // todo: kategorideki ürünleri getir
       Navigator.pushReplacement(
         context,
         PageTransition(
@@ -38,9 +34,19 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
           child: ListProductsPage(catId),
         ),
       );
-    } else {
-      // todo: alt kategorileri getir
+    }
+    // her kategori değişiminde
+    // breadcrumbs ekrana yazılması için güncelle
+    _updateBreadcrumbs();
+  }
 
+  void _updateBreadcrumbs() {
+    if (selectedMenus.length > 0) {
+      _breadcrumbs = '';
+      selectedMenus.forEach((element) {
+        _breadcrumbs += element.values.last.toString() + ' / ';
+      });
+      _breadcrumbs = _breadcrumbs.substring(0, _breadcrumbs.length - 3);
     }
   }
 
@@ -48,21 +54,26 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
   @override
   void initState() {
+    // ana kategorileri getir
     getCategories(0);
-    selectedMenuIds.addLast(0);
+
+    // seçili menülere 0 ı ekle
+    selectedMenus.addLast({0: ''});
+
+    // breadcrumbs ekrana yazılması için güncelle
+    _updateBreadcrumbs();
   }
 
   //////////////////////
 
   Future<bool> _onBackPressed() async {
-    print(selectedMenuIds);
-    if (selectedMenuIds.length > 1) {
-      selectedMenuIds.removeLast();
+    if (selectedMenus.length > 1) {
+      selectedMenus.removeLast();
       // geri gittikçe menüyü eski haline getir
-      getCategories(selectedMenuIds.last);
+      getCategories(selectedMenus.last.keys.last);
+      return false;
     } else {
-      // todo: burada en üst kademedeki menüye, yani ana menüye ulaştı ve geri gitmek istiyorsa sayfayı kapat
-       false;
+      return true;
     }
   }
 
@@ -73,11 +84,21 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
+        appBar: AppBar(
+          title: Text('Kategori Seçin'),
+        ),
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(10),
-            child: Column(children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Center(
+                child: Text(
+                  _breadcrumbs,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: selectedCategories.length,
@@ -85,7 +106,11 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
                     return Card(
                       child: ListTile(
                         onTap: () {
-                          selectedMenuIds.addLast(selectedCategories[index].id);
+                          selectedMenus.addLast({
+                            selectedCategories[index].id:
+                                selectedCategories[index].categoryName
+                          });
+
                           getCategories(selectedCategories[index].id);
                         },
                         title: Text(selectedCategories[index].categoryName),

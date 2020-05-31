@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:menuapp/screens/home.dart';
+import 'package:menuapp/screens/select_table.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Baloo',
       ),
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: SelectTablePage(),
     );
   }
 }

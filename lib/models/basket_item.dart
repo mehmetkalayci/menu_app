@@ -1,4 +1,4 @@
-class Basket {
+class BasketItem {
   int id;
   List<int> extraIds;
   List<String> extraNames;
@@ -16,7 +16,7 @@ class Basket {
   String username;
   String orderMemo;
 
-  Basket(
+  BasketItem(
       {this.id,
         this.extraIds,
         this.extraNames,
@@ -34,7 +34,7 @@ class Basket {
         this.username,
         this.orderMemo});
 
-  Basket.fromJson(Map<String, dynamic> json) {
+  BasketItem.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     extraIds = json['extraIds'].cast<int>();
     extraNames = json['extraNames'].cast<String>();

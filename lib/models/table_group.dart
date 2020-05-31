@@ -66,6 +66,7 @@ class Orders {
   int extraPrice;
   int productId;
   String productName;
+  String productIcon;
   int qty;
   double price;
   String serveName;
@@ -75,6 +76,7 @@ class Orders {
         this.extraPrice,
         this.productId,
         this.productName,
+        this.productIcon,
         this.qty,
         this.price,
         this.serveName});
@@ -84,6 +86,7 @@ class Orders {
     extraPrice = json['extraPrice'];
     productId = json['product_id'];
     productName = json['product_name'];
+    productIcon = json['productIcon'];
     qty = json['qty'];
     price = json['price'];
     serveName = json['serve_name'];
@@ -95,6 +98,7 @@ class Orders {
     data['extraPrice'] = this.extraPrice;
     data['product_id'] = this.productId;
     data['product_name'] = this.productName;
+    data['productIcon'] = this.productIcon;
     data['qty'] = this.qty;
     data['price'] = this.price;
     data['serve_name'] = this.serveName;
