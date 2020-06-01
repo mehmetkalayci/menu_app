@@ -8,6 +8,7 @@ import 'package:menuapp/screens/list_products.dart';
 import 'package:page_transition/page_transition.dart';
 
 class SelectMenuCategoryPage extends StatefulWidget {
+
   @override
   _SelectMenuCategoryPageState createState() => _SelectMenuCategoryPageState();
 }
@@ -21,16 +22,15 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
   void getCategories(int catId) {
     setState(() {
-      selectedCategories =
-          allCategories.where((element) => element.parentId == catId).toList();
+      selectedCategories = allCategories.where((element) => element.parentId == catId).toList();
     });
 
     if (selectedCategories.length <= 0) {
-      Navigator.pushReplacement(
+      // artık seçilecek kategori kalmadı, kategorideki ürünleri göster
+      Navigator.push(
         context,
         PageTransition(
           type: PageTransitionType.fade,
-          // burada selectedCategories[0] dogrudan alınabilir, zaten başka alt kategori yok 1 tane nesne var
           child: ListProductsPage(catId),
         ),
       );
@@ -54,6 +54,7 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
   @override
   void initState() {
+
     // ana kategorileri getir
     getCategories(0);
 

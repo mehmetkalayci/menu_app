@@ -1,11 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:menuapp/models/basket_item.dart';
+import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/models/table_group.dart';
 import 'package:menuapp/screens/select_menu_category.dart';
 import 'package:menuapp/screens/table_details.dart';
 import 'package:menuapp/widgets/table_item.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
 
 class SelectTablePage extends StatefulWidget {
   @override
@@ -13,8 +16,6 @@ class SelectTablePage extends StatefulWidget {
 }
 
 class _SelectTablePageState extends State<SelectTablePage> {
-
-
   ///////////////////////
   var data = DUMMY_GROUPS_WITH_TABLES.toList();
 
@@ -41,8 +42,6 @@ class _SelectTablePageState extends State<SelectTablePage> {
   @override
   void initState() {
     setState(() {
-
-
       // table groups doldur
       data.forEach((element) => tableGroups.add(element.name));
       tableGroups.add('Hepsi');
@@ -53,16 +52,17 @@ class _SelectTablePageState extends State<SelectTablePage> {
 
   @override
   Widget build(BuildContext context) {
+    var basketState = Provider.of<BasketState>(context);
+
     return Scaffold(
       appBar: AppBar(
-          title: Text('ANT POS'),
-          ),
+        title: Text('ANT POS'),
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(10),
           child: Column(children: [
-
             Container(
               height: 90,
               child: CustomScrollView(
@@ -96,9 +96,6 @@ class _SelectTablePageState extends State<SelectTablePage> {
                 ],
               ),
             ),
-
-
-
             Expanded(
               child: GridView.builder(
                 itemCount: tables.length,
@@ -107,10 +104,25 @@ class _SelectTablePageState extends State<SelectTablePage> {
                 itemBuilder: (BuildContext context, int index) {
                   return GestureDetector(
                     onTap: () {
+                      print(tables[index].id);
                       print(tables[index].tableName);
+                      // burada masaya ait detaya gidip bir ürün eklenebilir
+                      // ya da masa boşsa doğrudan kategoriye gidip ürün eklenebilir
+                      // bu adımda tıklanan masaId sini basket_state içindeki lastTableId'ye atayacağız
+                      basketState.setLastTable(
+                          tables[index].id, tables[index].tableName);
+                      print(basketState.getLastTableId);
+                      // lastTableId içindeki değeri basketItems'a değer ürün eklerken kullanacağız
+
                       // todo: masa seçildikten sonra kategori seçimine yönlendir
                       // todo: sipariş varsa, masa detay sayfası aç
-                      if (tables[index].orders.length > 0) {
+                      if (tables[index].orders.length > 0 ||
+                          basketState.getBasketItems
+                                  .where((element) =>
+                                      element.tableId == tables[index].id)
+                                  .toList()
+                                  .length >
+                              0) {
                         Navigator.push(
                           context,
                           PageTransition(
@@ -123,16 +135,27 @@ class _SelectTablePageState extends State<SelectTablePage> {
                           context,
                           PageTransition(
                             type: PageTransitionType.fade,
+                            // kategori seçerken masaId sini de gönderdik
                             child: SelectMenuCategoryPage(),
                           ),
                         );
                       }
                     },
+                    // burada masalar gösteriliyor
+                    // masada onaylanmamış sıpariş varsa kırmızı göster
+                    // masa boşşa gri, doluysa ve tüm sıparişleri onaylanmış ise yeşil göster
                     child: TableItem(
                         tables[index].tableName,
                         tables[index].orders.length > 0
                             ? Colors.lime
-                            : Colors.grey[100]),
+                            : basketState.getBasketItems
+                                        .where((element) =>
+                                            element.tableId == tables[index].id)
+                                        .toList()
+                                        .length >
+                                    0
+                                ? Colors.redAccent
+                                : Colors.grey[100]),
                   );
                 },
               ),

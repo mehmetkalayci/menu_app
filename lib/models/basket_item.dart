@@ -7,8 +7,9 @@ class BasketItem {
   int printerId;
   int productId;
   String productName;
+  String productIcon; // bu alanı json kısmına dahil etmedik
   int qty;
-  Null serveId;
+  int serveId;
   String serveName;
   int stockId;
   double stockReductionAmount;
@@ -25,6 +26,7 @@ class BasketItem {
         this.printerId,
         this.productId,
         this.productName,
+        this.productIcon,
         this.qty,
         this.serveId,
         this.serveName,

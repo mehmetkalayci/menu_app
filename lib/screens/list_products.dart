@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:menuapp/models/basket_item.dart';
+import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/models/product.dart';
 import 'package:menuapp/widgets/product_item.dart';
+import 'package:provider/provider.dart';
 
 class ListProductsPage extends StatefulWidget {
   int _categoryId;
@@ -32,6 +35,8 @@ class _ListProductsPageState extends State<ListProductsPage> {
 
   @override
   Widget build(BuildContext context) {
+    var basketState = Provider.of<BasketState>(context);
+
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
@@ -50,6 +55,10 @@ class _ListProductsPageState extends State<ListProductsPage> {
                 itemBuilder: (BuildContext context, int index) {
                   return GestureDetector(
                       onTap: () {
+                        // burada ürün seçildi. basketState içindeki lastSelectedProduct'a seçilen bu ürünün Idsini atadık
+                        basketState
+                            .setLastSelectedProductId(products[index].id);
+
                         print(products[index].productName);
                         showModalBottomSheet(
                             isScrollControlled: true,
@@ -76,9 +85,26 @@ class _ListProductsPageState extends State<ListProductsPage> {
   }
 }
 
-class MyBottomSheet extends StatelessWidget {
+class MyBottomSheet extends StatefulWidget {
   Product _product;
   MyBottomSheet(this._product);
+
+  @override
+  _MyBottomSheetState createState() => _MyBottomSheetState();
+}
+
+class _MyBottomSheetState extends State<MyBottomSheet> {
+  int qty = 1;
+  ServeTypes selectedServeType;
+  List<Extras> selectedExtras = [];
+
+  final orderNoteController = TextEditingController();
+
+  @override
+  void dispose() {
+    orderNoteController.dispose();
+    super.dispose();
+  }
 
   Widget _getServeTypes() {
     return Column(
@@ -103,21 +129,31 @@ class MyBottomSheet extends StatelessWidget {
                       itemBuilder: (context, index) => Padding(
                             padding: EdgeInsets.symmetric(horizontal: 10),
                             child: RaisedButton(
-                              color: Colors.amber,
+                              color: selectedServeType ==
+                                      this.widget._product.serveTypes[index]
+                                  ? Colors.lightGreenAccent
+                                  : Colors.amber,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               onPressed: () {
-                                print(this._product.serveTypes[index].name);
+                                // burada servis türü seçimi yaptık
+                                setState(() {
+                                  selectedServeType =
+                                      this.widget._product.serveTypes[index];
+                                });
+
+                                print('serveTypeDefinitionId');
+                                print(this.widget._product.serveTypes[index].serveTypeDefinitionId.toString());
                               },
                               child: Text(
-                                this._product.serveTypes[index].name,
+                                this.widget._product.serveTypes[index].name,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 18, height: 1.2),
                               ),
                             ),
                           ),
-                      itemCount: this._product.serveTypes.length),
+                      itemCount: this.widget._product.serveTypes.length),
                 ),
               ),
             ],
@@ -151,21 +187,34 @@ class MyBottomSheet extends StatelessWidget {
                       itemBuilder: (context, index) => Container(
                             margin: EdgeInsets.symmetric(horizontal: 10.0),
                             child: RaisedButton(
-                              color: Colors.amber,
+                              color: selectedExtras.contains(
+                                      this.widget._product.extras[index])
+                                  ? Colors.lightGreenAccent
+                                  : Colors.amber,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               onPressed: () {
-                                print(this._product.extras[index].name);
+                                // seçilen ekstraları selectedExtras'a ekledik, varsa sildik
+                                setState(() {
+                                  if (this.selectedExtras.contains(
+                                      this.widget._product.extras[index])) {
+                                    this.selectedExtras.remove(
+                                        this.widget._product.extras[index]);
+                                  } else {
+                                    this.selectedExtras.add(
+                                        this.widget._product.extras[index]);
+                                  }
+                                });
                               },
                               child: Text(
-                                this._product.extras[index].name,
+                                this.widget._product.extras[index].name,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 18, height: 1.2),
                               ),
                             ),
                           ),
-                      itemCount: this._product.extras.length),
+                      itemCount: this.widget._product.extras.length),
                 ),
               ),
             ],
@@ -191,19 +240,23 @@ class MyBottomSheet extends StatelessWidget {
             IconButton(
                 icon: Icon(Icons.remove),
                 onPressed: () {
-                  print('eksi');
+                  setState(() {
+                    this.qty > 1 ? this.qty-- : 1;
+                  });
                 }),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                '1',
+                this.qty.toString(),
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             IconButton(
                 icon: Icon(Icons.add),
                 onPressed: () {
-                  print('artı');
+                  setState(() {
+                    this.qty++;
+                  });
                 })
           ],
         ),
@@ -225,6 +278,7 @@ class MyBottomSheet extends StatelessWidget {
           maxLines: 1,
           minLines: 1,
           decoration: InputDecoration(hintText: 'Sipariş notunuzu girin...'),
+          controller: orderNoteController,
         ),
         SizedBox(height: 20),
       ],
@@ -233,6 +287,8 @@ class MyBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var basketState = Provider.of<BasketState>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Container(
@@ -248,8 +304,8 @@ class MyBottomSheet extends StatelessWidget {
               ),
             ),
             _getTakeNote(),
-            if (this._product.serveTypes.length > 0) _getServeTypes(),
-            if (this._product.extras.length > 0) _getExtras(),
+            if (this.widget._product.serveTypes.length > 0) _getServeTypes(),
+            if (this.widget._product.extras.length > 0) _getExtras(),
             _getAmount(),
             Expanded(
               child: Align(
@@ -262,10 +318,52 @@ class MyBottomSheet extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 10),
                     color: Colors.amber,
                     onPressed: () {
-                      print('asdf');
+                      // todo: burada belirnen masaId'siyle basket statetine siparişi ekle
+                      print('hangi masaya eklenecek->' +
+                          basketState.getLastTableId.toString());
+                      print('hangi masaya eklenecek->' +
+                          basketState.getLastTableName.toString());
+                      print('masaya hangi ürün eklenecek->' +
+                          basketState.getLastSelectedProduct.toString());
+
+
+                      // sepete eklenecek BasketItem nesnesini oluştur
+                      basketState.addToCart(new BasketItem(
+                        id: basketState.getBasketItems.length + 1,
+                        // seçilen ürün
+                        productId: this.widget._product.id,
+                        productName: this.widget._product.productName,
+                        productIcon: this.widget._product.icon,
+                        printerId: this.widget._product.printerId,
+                        qty: this.qty,
+
+                        // seçilen ekstralar
+                        extraIds: this.selectedExtras.map((e) => e.id).toList(),
+                        extraNames:
+                            this.selectedExtras.map((e) => e.name).toList(),
+                        extraPrice: this
+                            .selectedExtras
+                            .fold(0, (prev, element) => prev + element.price),
+
+                        // seçilen sunum
+                        serveId: this.selectedServeType.serveTypeDefinitionId,
+                        serveName: this.selectedServeType.name,
+                        price: this.selectedServeType.price,
+                        stockReductionAmount:
+                            this.selectedServeType.stockReductionAmount,
+                        // todo: buradaki stockId, serveTypeDefinitionId mi???
+                        stockId: this.selectedServeType.serveTypeDefinitionId,
+                        // tableId 'yi basketStateten al
+                        tableId: basketState.getLastTableId,
+
+                        orderMemo: this.orderNoteController.text,
+
+                        username:
+                            'shared prefden alınacak ya da provider a ekle',
+                      ));
                     },
                     child: Text(
-                      'MASA 1 \'E EKLE',
+                      '${basketState.getLastTableName.toUpperCase()}  \'E EKLE',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
@@ -279,4 +377,3 @@ class MyBottomSheet extends StatelessWidget {
     );
   }
 }
-
