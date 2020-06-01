@@ -3,7 +3,9 @@ import 'package:menuapp/models/basket_item.dart';
 import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/models/product.dart';
+import 'package:menuapp/screens/select_menu_category.dart';
 import 'package:menuapp/widgets/product_item.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class ListProductsPage extends StatefulWidget {
@@ -144,7 +146,12 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                                 });
 
                                 print('serveTypeDefinitionId');
-                                print(this.widget._product.serveTypes[index].serveTypeDefinitionId.toString());
+                                print(this
+                                    .widget
+                                    ._product
+                                    .serveTypes[index]
+                                    .serveTypeDefinitionId
+                                    .toString());
                               },
                               child: Text(
                                 this.widget._product.serveTypes[index].name,
@@ -325,7 +332,6 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                           basketState.getLastTableName.toString());
                       print('masaya hangi ürün eklenecek->' +
                           basketState.getLastSelectedProduct.toString());
-
 
                       // sepete eklenecek BasketItem nesnesini oluştur
                       basketState.addToCart(new BasketItem(

@@ -114,8 +114,6 @@ class _SelectTablePageState extends State<SelectTablePage> {
                       print(basketState.getLastTableId);
                       // lastTableId içindeki değeri basketItems'a değer ürün eklerken kullanacağız
 
-                      // todo: masa seçildikten sonra kategori seçimine yönlendir
-                      // todo: sipariş varsa, masa detay sayfası aç
                       if (tables[index].orders.length > 0 ||
                           basketState.getBasketItems
                                   .where((element) =>
@@ -146,15 +144,15 @@ class _SelectTablePageState extends State<SelectTablePage> {
                     // masa boşşa gri, doluysa ve tüm sıparişleri onaylanmış ise yeşil göster
                     child: TableItem(
                         tables[index].tableName,
-                        tables[index].orders.length > 0
-                            ? Colors.lime
-                            : basketState.getBasketItems
-                                        .where((element) =>
-                                            element.tableId == tables[index].id)
-                                        .toList()
-                                        .length >
-                                    0
-                                ? Colors.redAccent
+                        basketState.getBasketItems
+                                    .where((element) =>
+                                        element.tableId == tables[index].id)
+                                    .toList()
+                                    .length >
+                                0
+                            ? Colors.redAccent
+                            : tables[index].orders.length > 0
+                                ? Colors.lime
                                 : Colors.grey[100]),
                   );
                 },

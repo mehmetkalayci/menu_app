@@ -30,7 +30,7 @@ class BasketState  with ChangeNotifier {
     notifyListeners();
   }
 
-  void clear(BasketItem item) {
+  void removeFromCart(BasketItem item) {
     if (_basketItems.remove(item)) {
       notifyListeners();
     }

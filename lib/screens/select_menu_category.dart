@@ -34,10 +34,21 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
           child: ListProductsPage(catId),
         ),
       );
+
+      // yönlendirme yaptıktan sonra; geri gelinceki durumu hazırla
+      setState(() {
+        selectedMenus.clear();
+        selectedMenus.addLast({0: ''});
+        getCategories(0);
+      });
+
+
+    } else{
+      // her kategori değişiminde
+      // breadcrumbs ekrana yazılması için güncelle
+      _updateBreadcrumbs();
     }
-    // her kategori değişiminde
-    // breadcrumbs ekrana yazılması için güncelle
-    _updateBreadcrumbs();
+
   }
 
   void _updateBreadcrumbs() {
@@ -50,7 +61,6 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     }
   }
 
-  //////////////////////
 
   @override
   void initState() {
