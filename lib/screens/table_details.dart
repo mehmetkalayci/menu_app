@@ -1,11 +1,16 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:menuapp/models/basket_item.dart';
 import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/table_group.dart';
 import 'package:menuapp/screens/select_menu_category.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class TableDetailsPage extends StatefulWidget {
   Tables _table;
@@ -15,6 +20,20 @@ class TableDetailsPage extends StatefulWidget {
 }
 
 class _TableDetailsPageState extends State<TableDetailsPage> {
+
+  Future<http.Response> postRequest(data) async {
+    var body = json.encode(data);
+
+    var response = await http.post('https://telgrafla.com/api/send.php',
+        headers: {"Content-Type": "application/json"}, body: body);
+
+
+    print("${response.statusCode}");
+    print("${response.body}");
+
+    return response;
+  }
+
   @override
   Widget build(BuildContext context) {
     final basketState = Provider.of<BasketState>(context);
@@ -58,8 +77,6 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
         IconButton(
           icon: Icon(Icons.add),
           onPressed: () {
-            // todo: buradan menu kategorilere git ve ürün eklet
-
             Navigator.push(
               context,
               PageTransition(
@@ -95,8 +112,10 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                           },
                           title: Text(
                               this.widget._table.orders[index].productName),
-                          subtitle:
-                              Text(this.widget._table.orders[index].serveName),
+                          subtitle: Text(
+                              this.widget._table.orders[index].serveName +
+                                  ' ' +
+                                  basketItems[index].extraNames.join(', ')),
                           leading: CircleAvatar(
                             backgroundColor: Colors.transparent,
                             child: SvgPicture.string(
@@ -156,8 +175,7 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                                           ),
                                           onPressed: () {
                                             // basketState den silindi, changenotif ile hemen yansıdı
-                                            basketState.removeFromCart(
-                                                basketItems[index]);
+                                            basketState.removeFromCart(basketItems[index]);
                                             Navigator.of(context).pop();
                                           },
                                         ),
@@ -172,7 +190,9 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                               print(basketItems[index].productName);
                             },
                             title: Text(basketItems[index].productName),
-                            subtitle: Text(basketItems[index].serveName),
+                            subtitle: Text(basketItems[index].serveName +
+                                ' ' +
+                                basketItems[index].extraNames.join(', ')),
                             leading: CircleAvatar(
                               backgroundColor: Colors.transparent,
                               child: SvgPicture.string(
@@ -188,14 +208,50 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                       }),
                   SizedBox(height: 25),
                   SizedBox(
-                    width: MediaQuery.of(context).size.width-40,
+                    width: MediaQuery.of(context).size.width - 40,
                     child: RaisedButton(
                       padding: EdgeInsets.symmetric(vertical: 5),
                       color: Colors.amber,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        // todo: http istegi gönderilecek
+                        // todo: basketstate temizlenecek
+                        // todo: masalar tekrar çekilecek
+
+
+                        var temp = basketItems.map((e) => e.toJson()).toList();
+
+                        this.postRequest(temp).then((value) {
+                          if (value.statusCode == 200) {
+                            // istek başarıyla gittiyse; basketState'ten sepeti temizle
+                            // basketItems ı da temizle
+
+                            basketItems.forEach((element) => basketState.removeFromCart(element));
+                            // sepet gönderildi, sepetteki elemanlar temizlendi
+                            // şimdi masaları yeniden çekme isteği gönder
+
+                            //basketState.fetchTableGroups();
+                            // todo burada tekrar çek datayı yenile
+                            // todo: buraya bir bak çalışıyor mu
+
+                            Fluttertoast.showToast(
+                                msg: "Siparişler Alındı",
+                                toastLength: Toast.LENGTH_SHORT,
+                                timeInSecForIosWeb: 1);
+
+                          } else {
+                            Fluttertoast.showToast(
+                                msg: "Hata Oluştu!\n" + value.statusCode.toString(),
+                                toastLength: Toast.LENGTH_LONG,
+                                timeInSecForIosWeb: 1);
+                          }
+                        }).catchError((e) => Fluttertoast.showToast(
+                            msg: e.toString(),
+                            toastLength: Toast.LENGTH_LONG,
+                            timeInSecForIosWeb: 1));
+                      },
                       child: Text(
                         'Siparişleri Onayla',
                         textAlign: TextAlign.center,

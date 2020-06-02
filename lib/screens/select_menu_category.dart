@@ -1,26 +1,28 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/category.dart';
-import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/screens/list_products.dart';
 import 'package:page_transition/page_transition.dart';
 
-class SelectMenuCategoryPage extends StatefulWidget {
+import 'package:http/http.dart' as http;
 
+class SelectMenuCategoryPage extends StatefulWidget {
   @override
   _SelectMenuCategoryPageState createState() => _SelectMenuCategoryPageState();
 }
 
 class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
-  var allCategories = DUMMY_CATEGORIES.toList();
+  var allCategories = [];
   List<Category> selectedCategories = [];
 
   ListQueue<Map<int, String>> selectedMenus = ListQueue<Map<int, String>>();
   String _breadcrumbs = '';
 
-  void getCategories(int catId) {
+  void getCategories(int catId, String catName) {
     setState(() {
       selectedCategories = allCategories.where((element) => element.parentId == catId).toList();
     });
@@ -31,7 +33,7 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
         context,
         PageTransition(
           type: PageTransitionType.fade,
-          child: ListProductsPage(catId),
+          child: ListProductsPage(catId, catName),
         ),
       );
 
@@ -39,16 +41,13 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
       setState(() {
         selectedMenus.clear();
         selectedMenus.addLast({0: ''});
-        getCategories(0);
+        getCategories(0, '');
       });
-
-
-    } else{
+    } else {
       // her kategori değişiminde
       // breadcrumbs ekrana yazılması için güncelle
       _updateBreadcrumbs();
     }
-
   }
 
   void _updateBreadcrumbs() {
@@ -61,18 +60,42 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     }
   }
 
+  var isLoading = false;
+
+  _fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+    final response = await http.get("https://telgrafla.com/categories", headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      final responseData = json.decode(utf8.decode(response.bodyBytes));
+      this.allCategories = responseData
+          .map((item) => Category.fromJson(item))
+          .cast<Category>()
+          .toList();
+
+      setState(() {
+        isLoading = false;
+
+
+
+        // ana kategorileri getir
+        getCategories(0, '');
+
+        // seçili menülere 0 ı ekle
+        selectedMenus.addLast({0: ''});
+
+        // breadcrumbs ekrana yazılması için güncelle
+        _updateBreadcrumbs();
+      });
+    } else {
+      throw Exception('Failed to load categories');
+    }
+  }
 
   @override
   void initState() {
-
-    // ana kategorileri getir
-    getCategories(0);
-
-    // seçili menülere 0 ı ekle
-    selectedMenus.addLast({0: ''});
-
-    // breadcrumbs ekrana yazılması için güncelle
-    _updateBreadcrumbs();
+    _fetchData();
   }
 
   //////////////////////
@@ -81,7 +104,7 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     if (selectedMenus.length > 1) {
       selectedMenus.removeLast();
       // geri gittikçe menüyü eski haline getir
-      getCategories(selectedMenus.last.keys.last);
+      getCategories(selectedMenus.last.keys.last, selectedMenus.last.values.last);
       return false;
     } else {
       return true;
@@ -102,40 +125,45 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
         body: SafeArea(
           child: Padding(
             padding: EdgeInsets.all(10),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Center(
-                child: Text(
-                  _breadcrumbs,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: selectedCategories.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        onTap: () {
-                          selectedMenus.addLast({
-                            selectedCategories[index].id:
-                                selectedCategories[index].categoryName
-                          });
-
-                          getCategories(selectedCategories[index].id);
-                        },
-                        title: Text(selectedCategories[index].categoryName),
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.transparent,
-                          child: SvgPicture.string(
-                              selectedCategories[index].icon ?? ''),
+            child: this.isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                        Center(
+                          child: Text(
+                            _breadcrumbs,
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              )
-            ]),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: selectedCategories.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                child: ListTile(
+                                  onTap: () {
+                                    selectedMenus.addLast({
+                                      selectedCategories[index].id:
+                                          selectedCategories[index].categoryName
+                                    });
+
+                                    getCategories(selectedCategories[index].id, selectedCategories[index].categoryName);
+                                  },
+                                  title: Text(
+                                      selectedCategories[index].categoryName),
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    child: SvgPicture.string(
+                                        selectedCategories[index].icon ?? ''),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      ]),
           ),
         ),
       ),

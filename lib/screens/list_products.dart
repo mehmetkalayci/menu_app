@@ -1,16 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:menuapp/models/basket_item.dart';
 import 'package:menuapp/models/basket_state.dart';
-import 'package:menuapp/models/dummy.dart';
 import 'package:menuapp/models/product.dart';
-import 'package:menuapp/screens/select_menu_category.dart';
+import 'package:menuapp/screens/table_details.dart';
 import 'package:menuapp/widgets/product_item.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
+import 'package:http/http.dart' as http;
+
 class ListProductsPage extends StatefulWidget {
   int _categoryId;
-  ListProductsPage(this._categoryId);
+  String _categoryName;
+  ListProductsPage(this._categoryId, this._categoryName);
 
   @override
   _ListProductsPageState createState() => _ListProductsPageState();
@@ -18,19 +23,41 @@ class ListProductsPage extends StatefulWidget {
 
 class _ListProductsPageState extends State<ListProductsPage> {
   List<Product> products = [];
-  String categoryName = '';
+
+  var isLoading = false;
+
+  _fetchData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+
+
+    final response = await http.get("https://telgrafla.com/products",
+        headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      final responseData = json.decode(utf8.decode(response.bodyBytes));
+      this.products = responseData
+          .map((item) => Product.fromJson(item))
+          .cast<Product>()
+          .toList();
+      //.where((element) => element.categoryId == this.widget._categoryId)
+      //.toList();
+
+      print(products.length);
+
+      setState(() {
+        isLoading = false;
+      });
+    } else {
+      throw Exception('Failed to load products');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-
-    categoryName = DUMMY_CATEGORIES
-        .singleWhere((element) => element.id == this.widget._categoryId)
-        .categoryName;
-
-    products = DUMMY_PRODUCTS
-        .where((element) => element.categoryId == this.widget._categoryId)
-        .toList();
+    _fetchData();
   }
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
@@ -42,7 +69,28 @@ class _ListProductsPageState extends State<ListProductsPage> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text(categoryName),
+        title: Text(this.widget._categoryName),
+        actions: <Widget>[
+          if (basketState.getBasketItems
+                  .where((element) =>
+                      element.tableId == basketState.getLastSelectedTable.id)
+                  .length >
+              0)
+            IconButton(
+              onPressed: () {
+
+                // todo : doğrudan sipariş girilen masaya git
+                Navigator.push(
+                  context,
+                  PageTransition(
+                    type: PageTransitionType.fade,
+                    child: TableDetailsPage(basketState.getLastSelectedTable),
+                  ),
+                );
+              },
+              icon: Icon(Icons.shopping_basket),
+            )
+        ],
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -133,25 +181,18 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                             child: RaisedButton(
                               color: selectedServeType ==
                                       this.widget._product.serveTypes[index]
-                                  ? Colors.lightGreenAccent
+                                  ? Colors.redAccent
                                   : Colors.amber,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
                               ),
                               onPressed: () {
                                 // burada servis türü seçimi yaptık
+
                                 setState(() {
                                   selectedServeType =
                                       this.widget._product.serveTypes[index];
                                 });
-
-                                print('serveTypeDefinitionId');
-                                print(this
-                                    .widget
-                                    ._product
-                                    .serveTypes[index]
-                                    .serveTypeDefinitionId
-                                    .toString());
                               },
                               child: Text(
                                 this.widget._product.serveTypes[index].name,
@@ -196,7 +237,7 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                             child: RaisedButton(
                               color: selectedExtras.contains(
                                       this.widget._product.extras[index])
-                                  ? Colors.lightGreenAccent
+                                  ? Colors.redAccent
                                   : Colors.amber,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -248,7 +289,10 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                 icon: Icon(Icons.remove),
                 onPressed: () {
                   setState(() {
-                    this.qty > 1 ? this.qty-- : 1;
+                    this.qty--;
+                    if(this.qty <= 0) {
+                      Navigator.pop(context);
+                    }
                   });
                 }),
             Padding(
@@ -327,49 +371,66 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                     onPressed: () {
                       // todo: burada belirnen masaId'siyle basket statetine siparişi ekle
                       print('hangi masaya eklenecek->' +
-                          basketState.getLastTableId.toString());
+                          basketState.getLastSelectedTable.tableName);
                       print('hangi masaya eklenecek->' +
-                          basketState.getLastTableName.toString());
+                          basketState.getLastSelectedTable.tableName);
                       print('masaya hangi ürün eklenecek->' +
                           basketState.getLastSelectedProduct.toString());
 
-                      // sepete eklenecek BasketItem nesnesini oluştur
-                      basketState.addToCart(new BasketItem(
-                        id: basketState.getBasketItems.length + 1,
-                        // seçilen ürün
-                        productId: this.widget._product.id,
-                        productName: this.widget._product.productName,
-                        productIcon: this.widget._product.icon,
-                        printerId: this.widget._product.printerId,
-                        qty: this.qty,
+                      // tüm gerekli bilgilerin sağlanıp saglanmadığını kontrol et
+                      if (selectedServeType == null) {
+                        Fluttertoast.showToast(
+                            msg: "Servis Türü Seçin",
+                            toastLength: Toast.LENGTH_SHORT,
+                            timeInSecForIosWeb: 1);
+                      } else {
+                        // sepete eklenecek BasketItem nesnesini oluştur
+                        basketState.addToCart(new BasketItem(
+                          id: basketState.getBasketItems.length + 1,
+                          // seçilen ürün
+                          productId: this.widget._product.id,
+                          productName: this.widget._product.productName,
+                          productIcon: this.widget._product.icon,
+                          printerId: this.widget._product.printerId,
+                          qty: this.qty,
 
-                        // seçilen ekstralar
-                        extraIds: this.selectedExtras.map((e) => e.id).toList(),
-                        extraNames:
-                            this.selectedExtras.map((e) => e.name).toList(),
-                        extraPrice: this
-                            .selectedExtras
-                            .fold(0, (prev, element) => prev + element.price),
+                          // seçilen ekstralar
+                          extraIds:
+                              this.selectedExtras.map((e) => e.id).toList(),
+                          extraNames:
+                              this.selectedExtras.map((e) => e.name).toList(),
+                          extraPrice: this
+                              .selectedExtras
+                              .fold(0, (prev, element) => prev + element.price),
 
-                        // seçilen sunum
-                        serveId: this.selectedServeType.serveTypeDefinitionId,
-                        serveName: this.selectedServeType.name,
-                        price: this.selectedServeType.price,
-                        stockReductionAmount:
-                            this.selectedServeType.stockReductionAmount,
-                        // todo: buradaki stockId, serveTypeDefinitionId mi???
-                        stockId: this.selectedServeType.serveTypeDefinitionId,
-                        // tableId 'yi basketStateten al
-                        tableId: basketState.getLastTableId,
+                          // seçilen sunum
+                          serveId: this.selectedServeType.serveTypeDefinitionId,
+                          serveName: this.selectedServeType.name,
+                          price: this.selectedServeType.price,
+                          stockReductionAmount:
+                              this.selectedServeType.stockReductionAmount,
+                          // todo: buradaki stockId, serveTypeDefinitionId mi???
+                          stockId: this.selectedServeType.serveTypeDefinitionId,
+                          // tableId 'yi basketStateten al
+                          tableId: basketState.getLastSelectedTable.id,
 
-                        orderMemo: this.orderNoteController.text,
+                          orderMemo: this.orderNoteController.text,
 
-                        username:
-                            'shared prefden alınacak ya da provider a ekle',
-                      ));
+                          username:
+                              'shared prefden alınacak ya da provider a ekle',
+                        ));
+
+                        Navigator.pop(context);
+
+                        Fluttertoast.showToast(
+                            msg:
+                                "${'x' + this.qty.toString() + ' ' + this.selectedServeType.name + ' ' + this.widget._product.productName + ' ' + basketState.getLastSelectedTable.tableName + ' \'e eklendi.'}",
+                            toastLength: Toast.LENGTH_LONG,
+                            timeInSecForIosWeb: 1);
+                      }
                     },
                     child: Text(
-                      '${basketState.getLastTableName.toUpperCase()}  \'E EKLE',
+                      '${basketState.getLastSelectedTable.tableName.toUpperCase()}  \'E EKLE',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),

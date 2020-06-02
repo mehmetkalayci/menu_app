@@ -1,22 +1,35 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:menuapp/models/basket_item.dart';
+import 'package:menuapp/models/category.dart';
+import 'package:menuapp/models/product.dart';
+import 'package:menuapp/models/table_group.dart';
+import 'package:http/http.dart' as http;
 
 class BasketState  with ChangeNotifier {
 
+  // hangi masaya ürün ekleneceği bulmak için
+  Tables _lastSelectedTable;
+  Tables get getLastSelectedTable => _lastSelectedTable;
 
-  int _lastTableId = 0;
-  String _lastTableName = '';
+  // en son seçilen ürününId değeri
   int _lastSelectedProduct = 0;
-  List<BasketItem> _basketItems = [];
-
-  List<BasketItem> get getBasketItems => _basketItems;
-  int get getLastTableId => _lastTableId;
-  String get getLastTableName => _lastTableName;
   int get getLastSelectedProduct => _lastSelectedProduct;
 
-  void setLastTable(int tableId, String tableName) {
-    this._lastTableId = tableId;
-    this._lastTableName = tableName;
+
+
+  // mevcut sepeti tut
+  List<BasketItem> _basketItems = [];
+  List<BasketItem> get getBasketItems => _basketItems;
+
+
+
+
+  //////////////////////////////////////
+
+  void setLastTable(Tables table) {
+    this._lastSelectedTable = table;
     notifyListeners();
   }
 
@@ -31,8 +44,13 @@ class BasketState  with ChangeNotifier {
   }
 
   void removeFromCart(BasketItem item) {
-    if (_basketItems.remove(item)) {
+    if (_basketItems.contains(item)) {
+      _basketItems.remove(item);
       notifyListeners();
     }
   }
+
+
+
+
 }

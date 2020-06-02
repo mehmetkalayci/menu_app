@@ -3,6 +3,7 @@ import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/screens/select_table.dart';
 import 'package:provider/provider.dart';
 
+
 void main() {
   runApp(MyApp());
 }
@@ -10,6 +11,7 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     return ChangeNotifierProvider<BasketState>(
       create: (context) => BasketState(),
       child: MaterialApp(
