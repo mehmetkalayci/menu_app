@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:menuapp/models/basket_item.dart';
@@ -30,8 +31,6 @@ class _ListProductsPageState extends State<ListProductsPage> {
     setState(() {
       isLoading = true;
     });
-
-
 
     final response = await http.get("https://telgrafla.com/products",
         headers: {'Content-Type': 'application/json'});
@@ -78,9 +77,7 @@ class _ListProductsPageState extends State<ListProductsPage> {
               0)
             IconButton(
               onPressed: () {
-
-                // todo : doğrudan sipariş girilen masaya git
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageTransition(
                     type: PageTransitionType.fade,
@@ -105,11 +102,11 @@ class _ListProductsPageState extends State<ListProductsPage> {
                 itemBuilder: (BuildContext context, int index) {
                   return GestureDetector(
                       onTap: () {
-                        // burada ürün seçildi. basketState içindeki lastSelectedProduct'a seçilen bu ürünün Idsini atadık
-                        basketState
-                            .setLastSelectedProductId(products[index].id);
 
-                        print(products[index].productName);
+                        // burada ürün seçildi. basketState içindeki lastSelectedProduct'a seçilen ürünü atadık
+                        //basketState.setLastSelectedProduct(products[index]);
+                        //print(products[index].productName);
+
                         showModalBottomSheet(
                             isScrollControlled: true,
                             enableDrag: true,
@@ -123,8 +120,7 @@ class _ListProductsPageState extends State<ListProductsPage> {
                               return MyBottomSheet(products[index]);
                             });
                       },
-                      child: ProductItem(
-                          products[index].productName, products[index].icon));
+                      child: ProductItem(products[index].productName, products[index].icon));
                 },
               ),
             ),
@@ -165,49 +161,55 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
           style:
               TextStyle(fontSize: 18, height: 1, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
         Container(
-          height: 70,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 70,
-                  child: ListView.builder(
-                      itemExtent: 120,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) => Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: RaisedButton(
-                              color: selectedServeType ==
-                                      this.widget._product.serveTypes[index]
-                                  ? Colors.redAccent
-                                  : Colors.amber,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
+          height: 85,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Flexible(
+                child: CustomScrollView(
+                  shrinkWrap: true,
+                  scrollDirection: Axis.horizontal,
+                  slivers: <Widget>[
+                    SliverPadding(
+                      padding: EdgeInsets.all(0),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          <Widget>[
+                            for (var item in this.widget._product.serveTypes)
+                              Container(
+                                width: 115,
+                                padding: EdgeInsets.all(10),
+                                child: RaisedButton(
+                                  color: selectedServeType == item
+                                      ? Colors.redAccent
+                                      : Colors.amber,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  ),
+                                  onPressed: () {
+                                    // burada servis türü seçimi yaptık
+                                    setState(() {
+                                      selectedServeType = item;
+                                    });
+                                  },
+                                  child: Text(
+                                    item.name,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 18, height: 1.2),
+                                  ),
+                                ),
                               ),
-                              onPressed: () {
-                                // burada servis türü seçimi yaptık
-
-                                setState(() {
-                                  selectedServeType =
-                                      this.widget._product.serveTypes[index];
-                                });
-                              },
-                              child: Text(
-                                this.widget._product.serveTypes[index].name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 18, height: 1.2),
-                              ),
-                            ),
-                          ),
-                      itemCount: this.widget._product.serveTypes.length),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 10),
       ],
     );
   }
@@ -221,54 +223,59 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
           style:
               TextStyle(fontSize: 18, height: 1, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
         Container(
-          height: 70,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 70,
-                  child: ListView.builder(
-                      itemExtent: 120,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (context, index) => Container(
-                            margin: EdgeInsets.symmetric(horizontal: 10.0),
-                            child: RaisedButton(
-                              color: selectedExtras.contains(
-                                      this.widget._product.extras[index])
-                                  ? Colors.redAccent
-                                  : Colors.amber,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
+          height: 85,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Flexible(
+                child: CustomScrollView(
+                  shrinkWrap: true,
+                  scrollDirection: Axis.horizontal,
+                  slivers: <Widget>[
+                    SliverPadding(
+                      padding: EdgeInsets.all(0),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          <Widget>[
+                            for (var item in this.widget._product.extras)
+                              Container(
+                                width: 115,
+                                padding: EdgeInsets.all(10),
+                                child: RaisedButton(
+                                  color: selectedExtras.contains(item)
+                                      ? Colors.redAccent
+                                      : Colors.amber,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  ),
+                                  onPressed: () {
+                                    // seçilen ekstraları selectedExtras'a ekledik, varsa sildik
+                                    setState(() {
+                                      if (this.selectedExtras.contains(item)) {
+                                        this.selectedExtras.remove(item);
+                                      } else {
+                                        this.selectedExtras.add(item);
+                                      }
+                                    });
+                                  },
+                                  child: Text(
+                                    item.name,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 18, height: 1.2),
+                                  ),
+                                ),
                               ),
-                              onPressed: () {
-                                // seçilen ekstraları selectedExtras'a ekledik, varsa sildik
-                                setState(() {
-                                  if (this.selectedExtras.contains(
-                                      this.widget._product.extras[index])) {
-                                    this.selectedExtras.remove(
-                                        this.widget._product.extras[index]);
-                                  } else {
-                                    this.selectedExtras.add(
-                                        this.widget._product.extras[index]);
-                                  }
-                                });
-                              },
-                              child: Text(
-                                this.widget._product.extras[index].name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 18, height: 1.2),
-                              ),
-                            ),
-                          ),
-                      itemCount: this.widget._product.extras.length),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 10),
       ],
     );
   }
@@ -290,7 +297,7 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                 onPressed: () {
                   setState(() {
                     this.qty--;
-                    if(this.qty <= 0) {
+                    if (this.qty <= 0) {
                       Navigator.pop(context);
                     }
                   });
@@ -370,12 +377,8 @@ class _MyBottomSheetState extends State<MyBottomSheet> {
                     color: Colors.amber,
                     onPressed: () {
                       // todo: burada belirnen masaId'siyle basket statetine siparişi ekle
-                      print('hangi masaya eklenecek->' +
-                          basketState.getLastSelectedTable.tableName);
-                      print('hangi masaya eklenecek->' +
-                          basketState.getLastSelectedTable.tableName);
-                      print('masaya hangi ürün eklenecek->' +
-                          basketState.getLastSelectedProduct.toString());
+                      print('hangi masaya eklenecek->' + basketState.getLastSelectedTable.tableName);
+                      print('masaya hangi ürün eklenecek->' + this.widget._product.productName);
 
                       // tüm gerekli bilgilerin sağlanıp saglanmadığını kontrol et
                       if (selectedServeType == null) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class TableItem extends StatelessWidget {
-
   final String _title;
   final Color _color;
   TableItem(this._title, this._color);
@@ -24,10 +23,16 @@ class TableItem extends StatelessWidget {
                 blurRadius: 3)
           ]),
       child: Center(
-          child: Text(this._title,
-              textAlign: TextAlign.center,
-              style:
-              TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+        child: Text(
+          this._title.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.black,
+            decoration: TextDecoration.none
+          ),
+        ),
+      ),
     );
   }
 }

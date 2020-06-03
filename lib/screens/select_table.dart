@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/table_group.dart';
@@ -86,75 +85,95 @@ class _SelectTablePageState extends State<SelectTablePage> {
 
     return DefaultTabController(
       length: this._tabs.length,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('ANT POS'),
-            bottom:this.isLoading ? null : TabBar(tabs: this._tabs) ,
-        ),
-        body: TabBarView(
-          children: [
-            for (var item in this.tableGroups)
-              GridView.builder(
-                itemCount: item.tables.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, childAspectRatio: 1.25),
-                itemBuilder: (BuildContext context, int index) {
-                  return GestureDetector(
-                    onTap: () {
-                      print(item.tables[index].id);
-                      print(item.tables[index].tableName);
-                      // burada masaya ait detaya gidip bir ürün eklenebilir
-                      // ya da masa boşsa doğrudan kategoriye gidip ürün eklenebilir
-                      // bu adımda tıklanan masaId sini basket_state içindeki lastTableId'ye atayacağız
-                      basketState.setLastTable(item.tables[index]);
+      child: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              title: Text("ANT POS"),
+              leading: Icon(Icons.restaurant_menu),
+              titleSpacing: 0,
+              centerTitle: true,
+              pinned: true,
+              floating: true,
+              snap: true,
+              forceElevated: innerBoxIsScrolled,
+              bottom: this.isLoading ? null : TabBar(tabs: this._tabs, indicatorWeight: 4),
+            ),
+          ];
+        },
+        body: Container(
+          color: Colors.white,
+          child: TabBarView(
+            children: [
+              for (var item in this.tableGroups)
+                GridView.builder(
+                  itemCount: item.tables.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, childAspectRatio: 1.25),
+                  itemBuilder: (BuildContext context, int index) {
+                    return GestureDetector(
+                      onTap: () {
+                        print(item.tables[index].id);
+                        print(item.tables[index].tableName);
+                        // burada masaya ait detaya gidip bir ürün eklenebilir
+                        // ya da masa boşsa doğrudan kategoriye gidip ürün eklenebilir
+                        // bu adımda tıklanan masaId sini basket_state içindeki lastTableId'ye atayacağız
+                        basketState.setLastTable(item.tables[index]);
 
-                      // lastTableId içindeki değeri basketItems'a değer ürün eklerken kullanacağız
+                        // lastTableId içindeki değeri basketItems'a değer ürün eklerken kullanacağız
 
-                      if (item.tables[index].orders.length > 0 ||
-                          basketState.getBasketItems
-                                  .where((element) =>
-                                      element.tableId == item.tables[index].id)
-                                  .toList()
-                                  .length >
-                              0) {
-                        Navigator.push(
-                          context,
-                          PageTransition(
-                            type: PageTransitionType.fade,
-                            child: TableDetailsPage(item.tables[index]),
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          PageTransition(
-                            type: PageTransitionType.fade,
-                            // kategori seçerken masaId sini de gönderdik
-                            child: SelectMenuCategoryPage(),
-                          ),
-                        );
-                      }
-                    },
-                    // burada masalar gösteriliyor
-                    // masada onaylanmamış sıpariş varsa kırmızı göster
-                    // masa boşşa gri, doluysa ve tüm sıparişleri onaylanmış ise yeşil göster
-                    child: TableItem(
-                        item.tables[index].tableName,
-                        basketState.getBasketItems
+                        if (item.tables[index].orders.length > 0 ||
+                            basketState.getBasketItems
                                     .where((element) =>
                                         element.tableId ==
                                         item.tables[index].id)
                                     .toList()
                                     .length >
-                                0
-                            ? Colors.redAccent
-                            : item.tables[index].orders.length > 0
-                                ? Colors.lime
-                                : Colors.grey[100]),
-                  );
-                },
-              ),
-          ],
+                                0) {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              child: TableDetailsPage(item.tables[index]),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              // kategori seçerken masaId sini de gönderdik
+                              child: SelectMenuCategoryPage(),
+                            ),
+                          );
+                        }
+
+
+                        // todo bu verileri yenilemeli miyiz yenilememelimiyiz
+                        // this._fetchData();
+
+                      },
+                      // burada masalar gösteriliyor
+                      // masada onaylanmamış sıpariş varsa kırmızı göster
+                      // masa boşşa gri, doluysa ve tüm sıparişleri onaylanmış ise yeşil göster
+                      child: TableItem(
+                          item.tables[index].tableName,
+                          basketState.getBasketItems
+                                      .where((element) =>
+                                          element.tableId ==
+                                          item.tables[index].id)
+                                      .toList()
+                                      .length >
+                                  0
+                              ? Colors.redAccent
+                              : item.tables[index].orders.length > 0
+                                  ? Colors.lime
+                                  : Colors.grey[100]),
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );

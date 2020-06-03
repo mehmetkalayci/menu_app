@@ -2,10 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:menuapp/models/basket_item.dart';
-import 'package:menuapp/models/category.dart';
-import 'package:menuapp/models/product.dart';
 import 'package:menuapp/models/table_group.dart';
-import 'package:http/http.dart' as http;
 
 class BasketState  with ChangeNotifier {
 
@@ -13,10 +10,9 @@ class BasketState  with ChangeNotifier {
   Tables _lastSelectedTable;
   Tables get getLastSelectedTable => _lastSelectedTable;
 
-  // en son seçilen ürününId değeri
-  int _lastSelectedProduct = 0;
-  int get getLastSelectedProduct => _lastSelectedProduct;
-
+  // en son seçilen ürün değeri
+//  Product _lastSelectedProduct;
+//  Product get getLastSelectedProduct => _lastSelectedProduct;
 
 
   // mevcut sepeti tut
@@ -33,10 +29,10 @@ class BasketState  with ChangeNotifier {
     notifyListeners();
   }
 
-  void setLastSelectedProductId(int selectedProductId) {
-    this._lastSelectedProduct = selectedProductId;
-    notifyListeners();
-  }
+//  void setLastSelectedProduct(Product product) {
+//    this._lastSelectedProduct = product;
+//    notifyListeners();
+//  }
 
   void addToCart(BasketItem item) {
     _basketItems.add(item);

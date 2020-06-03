@@ -24,7 +24,8 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
   void getCategories(int catId, String catName) {
     setState(() {
-      selectedCategories = allCategories.where((element) => element.parentId == catId).toList();
+      selectedCategories =
+          allCategories.where((element) => element.parentId == catId).toList();
     });
 
     if (selectedCategories.length <= 0) {
@@ -66,7 +67,8 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     setState(() {
       isLoading = true;
     });
-    final response = await http.get("https://telgrafla.com/categories", headers: {'Content-Type': 'application/json'});
+    final response = await http.get("https://telgrafla.com/categories",
+        headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       final responseData = json.decode(utf8.decode(response.bodyBytes));
       this.allCategories = responseData
@@ -76,8 +78,6 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
       setState(() {
         isLoading = false;
-
-
 
         // ana kategorileri getir
         getCategories(0, '');
@@ -104,7 +104,8 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
     if (selectedMenus.length > 1) {
       selectedMenus.removeLast();
       // geri gittikçe menüyü eski haline getir
-      getCategories(selectedMenus.last.keys.last, selectedMenus.last.values.last);
+      getCategories(
+          selectedMenus.last.keys.last, selectedMenus.last.values.last);
       return false;
     } else {
       return true;
@@ -130,18 +131,39 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        Center(
-                          child: Text(
-                            _breadcrumbs,
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+                        if (_breadcrumbs != '')
+                           Text(
+                              _breadcrumbs,
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            
                           ),
-                        ),
                         Expanded(
                           child: ListView.builder(
                             itemCount: selectedCategories.length,
                             itemBuilder: (context, index) {
-                              return Card(
+                              return ListTile(
+                                onTap: () {
+                                  selectedMenus.addLast({
+                                    selectedCategories[index].id:
+                                        selectedCategories[index].categoryName
+                                  });
+
+                                  getCategories(selectedCategories[index].id,
+                                      selectedCategories[index].categoryName);
+                                },
+                                title: Text(
+                                    selectedCategories[index].categoryName),
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.transparent,
+                                  child: SvgPicture.string(
+                                      selectedCategories[index].icon ?? ''),
+                                ),
+                              );
+
+/*                              return Card(
+                                elevation: 10,
+                                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
                                 child: ListTile(
                                   onTap: () {
                                     selectedMenus.addLast({
@@ -160,6 +182,7 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
                                   ),
                                 ),
                               );
+                              */
                             },
                           ),
                         )
