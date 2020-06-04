@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
         sharedPreferences.setString('username', _usernameController.text);
         sharedPreferences.setString('password', _passwordController.text);
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           PageTransition(
             type: PageTransitionType.fade,
