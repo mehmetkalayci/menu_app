@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:menuapp/models/basket_state.dart';
 import 'package:menuapp/models/category.dart';
 import 'package:menuapp/screens/list_products.dart';
 import 'package:page_transition/page_transition.dart';
@@ -24,8 +23,7 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
 
   void getCategories(int catId, String catName) {
     setState(() {
-      selectedCategories =
-          allCategories.where((element) => element.parentId == catId).toList();
+      selectedCategories =  allCategories.where((element) => element.parentId == catId).toList();
     });
 
     if (selectedCategories.length <= 0) {
@@ -136,21 +134,22 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
                               _breadcrumbs,
                               style: TextStyle(
                                   fontSize: 20, fontWeight: FontWeight.bold),
-                            
+
                           ),
                         Expanded(
-                          child: ListView.builder(
+                          child: ListView.separated(
+                            separatorBuilder: (context, index) {
+                              return Divider();
+                            },
                             itemCount: selectedCategories.length,
                             itemBuilder: (context, index) {
                               return ListTile(
                                 onTap: () {
                                   selectedMenus.addLast({
-                                    selectedCategories[index].id:
-                                        selectedCategories[index].categoryName
+                                    selectedCategories[index].id:  selectedCategories[index].categoryName
                                   });
 
-                                  getCategories(selectedCategories[index].id,
-                                      selectedCategories[index].categoryName);
+                                  getCategories(selectedCategories[index].id,  selectedCategories[index].categoryName);
                                 },
                                 title: Text(
                                     selectedCategories[index].categoryName),
@@ -161,28 +160,6 @@ class _SelectMenuCategoryPageState extends State<SelectMenuCategoryPage> {
                                 ),
                               );
 
-/*                              return Card(
-                                elevation: 10,
-                                margin: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
-                                child: ListTile(
-                                  onTap: () {
-                                    selectedMenus.addLast({
-                                      selectedCategories[index].id:
-                                          selectedCategories[index].categoryName
-                                    });
-
-                                    getCategories(selectedCategories[index].id, selectedCategories[index].categoryName);
-                                  },
-                                  title: Text(
-                                      selectedCategories[index].categoryName),
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.transparent,
-                                    child: SvgPicture.string(
-                                        selectedCategories[index].icon ?? ''),
-                                  ),
-                                ),
-                              );
-                              */
                             },
                           ),
                         )

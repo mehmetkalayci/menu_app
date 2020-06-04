@@ -32,7 +32,9 @@ class _ListProductsPageState extends State<ListProductsPage> {
       isLoading = true;
     });
 
-    final response = await http.get("https://telgrafla.com/products",
+    print("https://telgrafla.com/products/${this.widget._categoryId}");
+
+    final response = await http.get("https://telgrafla.com/products/${this.widget._categoryId}",
         headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       final responseData = json.decode(utf8.decode(response.bodyBytes));
@@ -40,10 +42,6 @@ class _ListProductsPageState extends State<ListProductsPage> {
           .map((item) => Product.fromJson(item))
           .cast<Product>()
           .toList();
-      //.where((element) => element.categoryId == this.widget._categoryId)
-      //.toList();
-
-      print(products.length);
 
       setState(() {
         isLoading = false;

@@ -17,6 +17,7 @@ class SelectTablePage extends StatefulWidget {
 }
 
 class _SelectTablePageState extends State<SelectTablePage> {
+
   List<Tables> tables = [];
   List<TableGroup> tableGroups = [];
 
@@ -43,7 +44,8 @@ class _SelectTablePageState extends State<SelectTablePage> {
     setState(() {
       isLoading = true;
     });
-    final response = await http.get("https://telgrafla.com/tables",
+
+    final response = await http.get("https://telgrafla.com/api/index.php?q=tables",
         headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       final responseData = json.decode(utf8.decode(response.bodyBytes));
@@ -78,6 +80,8 @@ class _SelectTablePageState extends State<SelectTablePage> {
     super.initState();
     _fetchData();
   }
+
+
 
   @override
   Widget build(BuildContext context) {

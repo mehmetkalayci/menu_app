@@ -22,8 +22,8 @@ class TableDetailsPage extends StatefulWidget {
 class _TableDetailsPageState extends State<TableDetailsPage> {
   Future<http.Response> postRequest(data) async {
     var body = json.encode(data);
-
-    var response = await http.post('https://telgrafla.com/api/send.php',
+    // todo sipariş alınacak adres yazılacak
+    var response = await http.post('https://telgrafla.com/login.php',
         headers: {"Content-Type": "application/json"}, body: body);
 
     print("${response.statusCode}");
@@ -226,9 +226,6 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                         onPressed: () async {
-                          // todo: http istegi gönderilecek
-                          // todo: basketstate temizlenecek
-                          // todo: masalar tekrar çekilecek
 
                           var temp = basketItems.map((e) => e.toJson()).toList();
 
@@ -237,15 +234,13 @@ class _TableDetailsPageState extends State<TableDetailsPage> {
                               // istek başarıyla gittiyse; basketState'ten sepeti temizle
                               // basketItems ı da temizle
 
-                              basketItems.forEach((element) =>
-                                  basketState.removeFromCart(element));
+                              basketItems.forEach((element) => basketState.removeFromCart(element));
                               // sepet gönderildi, sepetteki elemanlar temizlendi
                               // şimdi masaları yeniden çekme isteği gönder
 
-                              //basketState.fetchTableGroups();
-
                               // todo burada tekrar çek datayı yenile
                               // todo: buraya bir bak çalışıyor mu
+
 
                               Fluttertoast.showToast(
                                   msg: "Siparişler Alındı",

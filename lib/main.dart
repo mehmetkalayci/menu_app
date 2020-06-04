@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:menuapp/models/basket_state.dart';
-import 'package:menuapp/screens/select_table.dart';
+import 'package:menuapp/screens/login.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() {
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Baloo',
         ),
         debugShowCheckedModeBanner: false,
-        home: SelectTablePage(),
+        home: LoginPage(),
       ),
     );
   }
